@@ -1,5 +1,5 @@
 
-const axios = require('axios')
+const request = require('superagent')
 const url = 'http://checkip.amazonaws.com/';
 let response;
 
@@ -38,14 +38,13 @@ let response;
  *
  */
 exports.lambdaHandler = async (event, context) => {
-  console.log('lambdaHandler');
     try {
-        const ret = await axios(url);
+        const ret = await request.get(url);
         response = {
             'statusCode': 200,
             'body': JSON.stringify({
                 message: 'hello app',
-                location: ret.data.trim()
+                location: ret.text.trim()
             })
         }
     } catch (err) {

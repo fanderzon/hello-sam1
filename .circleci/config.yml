@@ -1,8 +1,120 @@
+workspace_root: &workspace_root
+  ~/hello-sam1
+
+attach_workspace: &attach_workspace
+  attach_workspace:
+    at: *workspace_root
+
+defaults: &defaults
+  working_directory: *workspace_root
+  docker:
+    - image: circleci/node:8.10
+
 version: 2
 jobs:
-  build:
-    docker:
-      - image: circleci/node:8.10
+  install:
+    <<: *defaults
     steps:
       - checkout
-      - run: echo "A first hello"
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "package.json" }}
+            - dependencies-
+      - run: npm install
+      - save_cache:
+          key: dependencies-{{ checksum "package.json" }}
+          paths:
+              - node_modules
+      - persist_to_workspace:
+          root: *workspace_root
+          paths:
+            - .
+
+  install_hello_world_dependencies:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - restore_cache:
+          keys:
+            - hello-world-dependencies-{{ checksum "package.json" }}
+            - hello-world-dependencies-
+      - run:
+          command: npm install
+          pwd: hello-world
+      - save_cache:
+          key: hello-world-dependencies-{{ checksum "package.json" }}
+          paths:
+            - hello-world/node_modules
+      - persist_to_workspace:
+          root: *workspace_root
+          paths:
+            - hello-world/node_modules/*
+
+  lint:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run:
+          name: "Lint code"
+          command: npm run lint
+
+  test:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run:
+          name: "Run tests"
+          command: npm run test
+
+  deploy:
+    <<: *defaults
+    docker:
+      - image: circleci/python:3.7.2-node
+    steps:
+      - *attach_workspace
+      - run:
+          name: "Install AWS CLI"
+          command: sudo pip install awscli
+      - run:
+          name: "Install AWS SAM CLI"
+          command: sudo pip install aws-sam-cli
+      - run:
+          name: "Package application to S3"
+          command: npm run package
+      - run:
+          name: "Deploy"
+          command: npm run deploy:stack
+
+workflows:
+  version: 2
+  test_deploy:
+    jobs:
+      - install:
+          filters:
+            tags:
+              only: /.*/
+      - install_hello_world_dependencies:
+          requires:
+            - install
+          filters:
+            tags:
+              only: /.*/
+      - lint:
+          requires:
+            - install_hello_world_dependencies
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          requires:
+            - install_hello_world_dependencies
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              only: master

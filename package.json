@@ -1,0 +1,40 @@
+{
+  "name": "hello-sam1",
+  "version": "1.0.0",
+  "description": "This is a sample template for sam-app - Below is a brief explanation of what we have generated for you:",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint --ext .js hello-world/ --max-warnings=0",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "echo \"No tests yet\"",
+    "deploy:stack": "echo \"No deploy yet\"",
+    "prepackage": "cd hello-world && npm i --production",
+    "package": "sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket fanderzon-hello-sam1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fanderzon/hello-sam1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fanderzon/hello-sam1/issues"
+  },
+  "homepage": "https://github.com/fanderzon/hello-sam1#readme",
+  "lint-staged": {
+    "*.js": [
+      "eslint --max-warnings=0"
+    ]
+  },
+  "dependencies": {
+    "aws-sdk": "2.390.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.3.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "husky": "1.3.1",
+    "lint-staged": "8.1.0",
+    "prettier": "1.15.3"
+  }
+}
